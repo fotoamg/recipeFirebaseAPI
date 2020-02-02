@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+    body {
+        padding: 4px;
+        text-align: center;
+    }
+
+    div {
+      margin: auto;
+      max-width: 400px;
+    }
+
+    a {
+        max-width: 400px;
+        border-radius: 5px;
+        border: 2px solid  #041A96;
+        display: block;
+    }
+
+    a:link, a:visited {
+      background-color: #3443A6;
+      color: white;
+      padding: 14px 25px;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    a:hover, a:active {
+      background-color:blue;
+    }
+    </style>
+  </head>
+  <body>
+    <h2>Recipe API running</h2>
+    <p>Main API call examples (no swagger generated nice doc, sorry):</p>
+    <div>
+      <a href="/api/recipes" target="_blank">/api/recipes</a>
+      <a href="/api/categories" target="_blank">/api/categories</a>
+      <a href="/api/auth/login/fotoamg@gmail.com/123456" target="_blank">/api/auth/login/:email/:password</a>  
+    </div>
+  </body>
+</html>
