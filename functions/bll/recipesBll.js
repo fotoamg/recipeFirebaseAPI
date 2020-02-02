@@ -147,11 +147,11 @@ module.exports = function (ds) {
         return new Promise((resolve, reject) => {
 
             let ingredientList = []
-            var ins = ingredients.split(',');
+            const ins = ingredients.split(',');
             ins.forEach(ing => {
-                var is = ing.split(' ');
-                var i = is[is.length - 1];
-                var a = '';
+                const is = ing.split(' ');
+                const i = is[is.length - 1];
+                const a = '';
                 if (is.length > 1) {
                     for (j = 0; j < is.length - 1; j++) {
                         a = a + ' ' + is[j];
@@ -160,12 +160,12 @@ module.exports = function (ds) {
                 ingredientList.push({ "title": i, "amount": a });
             });
             let directionList = [];
-            var dirs = directions.split('\n');
+            const dirs = directions.split('\n');
             dirs.forEach(dir => {
                 directionList.push({ "direction": dir });
             });
-            var cs = categories.split(",");
-            var catids = [];
+            const cs = categories.split(",");
+            const catids = [];
             cs.forEach(cat => {
                 const categoryTitle = cat.trim();
                 categoryList.forEach(cl => {
@@ -176,7 +176,7 @@ module.exports = function (ds) {
             });
             ds.addRecipe(title, ingredientList, directionList, catids, token)
                 .then(recipeId => {
-                    var ps = [];
+                    const ps = [];
                     catids.forEach(categoryId => {
                         ps.push(ds.addUsersRecipe(userId, categoryId, recipeId, token));
                         ps.push(ds.addCategoriesRecipe(categoryId, recipeId, token));
@@ -192,7 +192,7 @@ module.exports = function (ds) {
 
     function clearDb(token) {
         return new Promise((resolve, reject) => {
-            var promises = [];
+            const promises = [];
             promises.push(ds.delCollection('categoriesrecipes', token));
             promises.push(ds.delCollection('usersrecipes', token));
             promises.push(ds.delCollection('categories', token));
@@ -210,20 +210,20 @@ module.exports = function (ds) {
                 let recipes = JSON.parse(data);
                 let categoryTitles = [];
                 recipes.forEach(r => {
-                    var cs = r.categories.split(",");
+                    const cs = r.categories.split(",");
                     cs.forEach(c => {
                         if (categoryTitles.indexOf(c) < 0) {
                             categoryTitles.push(c)
                         }
                     })
                 })
-                var catPromises = []
+                const catPromises = []
                 categoryTitles.forEach(title => {
                     catPromises.push(ds.addCategory(title, token))
                 })
                 Promise.all(catPromises)
                     .then(cats => {
-                        var promises = [];
+                        const promises = [];
                         recipes.forEach(r => {
                             promises.push(addRecipe(r.title, r.ingredients, r.directions, r.categories, uid, cats, token))
                         });

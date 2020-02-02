@@ -2,15 +2,15 @@ module.exports = function (databaseUrl) {
     
     function get(path, token) {
         return new Promise((resolve, reject) => {
-            var req = makeRequest("GET", path, token, resolve, reject);
+            const req = makeRequest("GET", path, token, resolve, reject);
             req.end();
         })
     }
 
     function post(path, obj, token) {
         return new Promise((resolve, reject) => {
-            var req = makeRequest("POST", path, token, resolve, reject);
-            var postData = JSON.stringify(obj);
+            const req = makeRequest("POST", path, token, resolve, reject);
+            const postData = JSON.stringify(obj);
             req.write(postData);
             req.end();
         })
@@ -18,8 +18,8 @@ module.exports = function (databaseUrl) {
 
     function put(path, obj, token) {
         return new Promise((resolve, reject) => {
-            var req = makeRequest("PUT", path, token, resolve, reject);
-            var postData = JSON.stringify(obj);
+            const req = makeRequest("PUT", path, token, resolve, reject);
+            const postData = JSON.stringify(obj);
             req.write(postData);
             req.end();
         })
@@ -28,8 +28,8 @@ module.exports = function (databaseUrl) {
     function del(path, obj, token) {
         console.log(databaseUrl)
         return new Promise((resolve, reject) => {
-            var req = makeRequest("DELETE", path, token, resolve, reject);
-            var postData = JSON.stringify(obj);
+            const req = makeRequest("DELETE", path, token, resolve, reject);
+            const postData = JSON.stringify(obj);
             req.write(postData);
             req.end();
         })
@@ -44,7 +44,7 @@ module.exports = function (databaseUrl) {
         if (path[0] !== '/') {
             path = '/' + path;
         }
-        var options = {
+        const options = {
             host: databaseUrl,
             port: 443,
             path: `${path}.json${tokenString}`,
@@ -56,7 +56,7 @@ module.exports = function (databaseUrl) {
             }
         };
         const https = require('https');
-        var req = https.request(options, function (res) {
+        const req = https.request(options, function (res) {
             if (res.statusCode === 401) {
                 rejectFunc({
                     statusCode: 401,
@@ -69,7 +69,7 @@ module.exports = function (databaseUrl) {
                 });
             }
             else {
-                var responseString = "";
+                const responseString = "";
 
                 res.on("data", function (data) {
                     responseString += data;

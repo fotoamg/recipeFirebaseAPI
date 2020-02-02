@@ -179,7 +179,7 @@ module.exports = function (fm) {
 
     function addCategory(title, token) {
         return new Promise((resolve, reject) => {
-            var obj = {
+            const obj = {
                 title: title
             };
             fm.post('categories', obj, token)
@@ -190,7 +190,7 @@ module.exports = function (fm) {
 
     function addUsersRecipe(userId, categoryId, recipeId, token) {
         return new Promise((resolve, reject) => {
-            var obj = {
+            const obj = {
                 recipeId: recipeId
             };
             fm.post(`usersrecipes/${userId}/${categoryId}`, obj, token)
@@ -201,7 +201,7 @@ module.exports = function (fm) {
 
     function addCategoriesRecipe(categoryId, recipeId, token) {
         return new Promise((resolve, reject) => {
-            var obj = {
+            const obj = {
                 recipeId: recipeId
             };
             fm.post(`categoriesrecipes/${categoryId}`, obj, token)
