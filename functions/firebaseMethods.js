@@ -69,13 +69,13 @@ module.exports = function (databaseUrl) {
                 });
             }
             else {
-                const responseString = "";
+                let responseString = "";
 
                 res.on("data", function (data) {
                     responseString += data;
                 });
                 res.on("end", function () {
-                    let data = JSON.parse(responseString)
+                    const data = JSON.parse(responseString)
                     resolveFunc(data);
                 });
             }

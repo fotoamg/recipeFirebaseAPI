@@ -1,20 +1,20 @@
-module.exports = function (ds) {
+module.exports = function (authLogic, fm) {
 
     function getRecipeSelectList(userId, categories, token) {
         return new Promise((resolve, reject) => {
-            ds.listRecipesByUserByCategories(userId, categories, token)
+            listRecipesByUserByCategories(userId, categories, token)
                 .then(data => {
                     let result = {
                         userId: data.userId,
                         list: data.list.map(mapRecipeToListItem),
                         connectedLists: []
                     };
-                    ds.listConnectedUsers(userId, token)
+                    authLogic.listConnectedUsers(userId, token)
                         .then(userList => {
                             console.log(userList)
                             let promises = []
                             userList.forEach(conUserId => {
-                                promises.push(ds.listRecipesByUserByCategories(conUserId, categories, token))
+                                promises.push(listRecipesByUserByCategories(conUserId, categories, token))
                             })
                             Promise.all(promises)
                                 .then(dataList => {
@@ -55,7 +55,7 @@ module.exports = function (ds) {
 
     function getRecipesToSave(token) {
         return new Promise((resolve, reject) => {
-            ds.listRecipes(token)
+            listRecipes(token)
                 .then(list => {
                     let promises = [];
                     list.forEach(recipe => {
@@ -93,7 +93,7 @@ module.exports = function (ds) {
             }
             let promises = [];
             recipe.data.categories.forEach(categoryId => {
-                promises.push(ds.getCategory(categoryId, token));
+                promises.push(getCategory(categoryId, token));
             })
             Promise.all(promises)
                 .then(categories => {
@@ -121,11 +121,11 @@ module.exports = function (ds) {
 
     function getRecipe(id, token) {
         return new Promise((resolve, reject) => {
-            ds.getRecipe(id, token)
+            getRecipe(id, token)
                 .then(recipe => {
                     let promises = [];
                     recipe.data.categories.forEach(categoryId => {
-                        promises.push(ds.getCategory(categoryId, token));
+                        promises.push(getCategory(categoryId, token));
                     })
                     Promise.all(promises)
                         .then(categories => {
@@ -174,12 +174,12 @@ module.exports = function (ds) {
                     }
                 })
             });
-            ds.addRecipe(title, ingredientList, directionList, catids, token)
+            addRecipe(title, ingredientList, directionList, catids, token)
                 .then(recipeId => {
                     const ps = [];
                     catids.forEach(categoryId => {
-                        ps.push(ds.addUsersRecipe(userId, categoryId, recipeId, token));
-                        ps.push(ds.addCategoriesRecipe(categoryId, recipeId, token));
+                        ps.push(addUsersRecipe(userId, categoryId, recipeId, token));
+                        ps.push(addCategoriesRecipe(categoryId, recipeId, token));
                     })
                     Promise.all(ps)
                         .then(ref => resolve(ref))
@@ -193,10 +193,10 @@ module.exports = function (ds) {
     function clearDb(token) {
         return new Promise((resolve, reject) => {
             const promises = [];
-            promises.push(ds.delCollection('categoriesrecipes', token));
-            promises.push(ds.delCollection('usersrecipes', token));
-            promises.push(ds.delCollection('categories', token));
-            promises.push(ds.delCollection('recipes', token));
+            promises.push(delCollection('categoriesrecipes', token));
+            promises.push(delCollection('usersrecipes', token));
+            promises.push(delCollection('categories', token));
+            promises.push(delCollection('recipes', token));
             Promise.all(promises).then(ref => resolve()).catch(error => reject(error));
         });
     }
@@ -219,7 +219,7 @@ module.exports = function (ds) {
                 })
                 const catPromises = []
                 categoryTitles.forEach(title => {
-                    catPromises.push(ds.addCategory(title, token))
+                    catPromises.push(addCategory(title, token))
                 })
                 Promise.all(catPromises)
                     .then(cats => {
@@ -237,13 +237,207 @@ module.exports = function (ds) {
         });
     }
 
+    function listRecipes(token) {
+        return new Promise((resolve, reject) => {
+            fm.get('recipes', token)
+                .then(data => {
+                    let list = [];
+                    for (const key in data) {
+                        let value = data[key];
+                        let recipe = {
+                            id: key,
+                            data: value
+                        }
+                        list.push(recipe);
+                    }
+                    resolve(list);
+                })
+                .catch(error => reject(error))
+        });
+    }
+
+    function listRecipesByUserByCategories(userId, categories, token) {
+        return new Promise((resolve, reject) => {
+            let promises = [];
+            listRecipeIdsByUser(userId, categories, token)
+                .then(ids => {
+                    ids.forEach(id => {
+                        promises.push(getRecipe(id, token));
+                    })
+                    Promise.all(promises)
+                        .then(list => resolve( {
+                            userId: userId,
+                            list: list
+                        }))
+                        .catch(error => reject(error));
+                })
+                .catch(error => reject(error))
+        })
+    }
+
+    function listRecipeIdsByUser(userId, categories, token) {
+        return new Promise((resolve, reject) => {
+            let promises = []
+            categories.forEach(catId => {
+                promises.push(listRecipeIdsByUserByCategory(userId, catId, token));
+            })
+            Promise.all(promises)
+                .then(lists => {
+                    let list = [];
+                    lists.forEach(l => {
+                        l.forEach(e => {
+                            if (list.indexOf(e) < 0) {
+                                list.push(e);
+                            }
+                        })
+                    })
+                    resolve(list);
+                })
+                .catch(error => reject(error));
+        })
+    }
+
+    function listRecipeIdsByUserByCategory(userId, categoryId, token) {
+        return new Promise((resolve, reject) => {
+            const path = `usersrecipes/${userId}/${categoryId}`;
+            fm.get(path, token)
+                .then(data => {
+                    let list = [];
+                    for (const key in data) {
+                        let value = data[key];
+                        list.push(value.recipeId);
+                    }
+                    resolve(list);
+                })
+                .catch(error => reject(error))
+        })
+    }
+
+    function getRecipe(id, token) {
+        return new Promise((resolve, reject) => {
+            const path = `recipes/${id}`;
+            fm.get(path, token)
+                .then(data => {
+                    resolve({
+                        id: id,
+                        data: data
+                    })
+                })
+                .catch(error => reject(error))
+        })
+    }
+
+    function addRecipe(title, ingredients, directions, categoryIds, token) {
+        return new Promise((resolve, reject) => {
+            const obj = {
+                title: title,
+                ingredients: ingredients,
+                directions: directions,
+                categories: categoryIds
+            };
+            fm.post(`recipes`, obj, token)
+                .then(ref => resolve(ref.name))
+                .catch(error => reject(error));
+        })
+    }
+
+    function listCategories(token) {
+        return new Promise((resolve, reject) => {
+            fm.get('categories', token)
+                .then(data => {
+                    let list = [];
+                    for (const key in data) {
+                        let value = data[key];
+                        let category = {
+                            id: key,
+                            title: value.title
+                        }
+                        list.push(category);
+                    }
+                    resolve(list);
+                })
+                .catch(error => reject(error))
+        })
+    }
+
+    function getCategory(id, token) {
+        return new Promise((resolve, reject) => {
+            const path = `categories/${id}`;
+            fm.get(path, token)
+                .then(data => {
+                    resolve({
+                        id: id,
+                        title: data.title
+                    })
+                })
+                .catch(error => reject(error))
+        })
+    }
+
+    function addCategory(title, token) {
+        return new Promise((resolve, reject) => {
+            const obj = {
+                title: title
+            };
+            fm.post('categories', obj, token)
+                .then(ref => resolve({id: ref.name, title: title}))
+                .catch(error => reject(error));
+        });
+    }
+
+    function addUsersRecipe(userId, categoryId, recipeId, token) {
+        return new Promise((resolve, reject) => {
+            const obj = {
+                recipeId: recipeId
+            };
+            fm.post(`usersrecipes/${userId}/${categoryId}`, obj, token)
+                .then(ref => resolve(ref))
+                .catch(error => reject(error));
+        });
+    }
+
+    function addCategoriesRecipe(categoryId, recipeId, token) {
+        return new Promise((resolve, reject) => {
+            const obj = {
+                recipeId: recipeId
+            };
+            fm.post(`categoriesrecipes/${categoryId}`, obj, token)
+                .then(ref => resolve(ref))
+                .catch(error => reject(error));
+        });
+    }
+
+    function delCollection(path, token) {
+        return new Promise((resolve, reject) => {
+            fm.del(path, null, token)
+                .then(ref => resolve(ref))
+                .catch(error => {
+                    console.log(error)
+                    reject(error)
+                })
+        })
+    }
+
+
     return {
         getRecipeSelectList: getRecipeSelectList,
         getRecipesToSave: getRecipesToSave,
         getRecipe: getRecipe,
 
         clearDb: clearDb,
-        initRecipesFromJson: initRecipesFromJson
+        initRecipesFromJson: initRecipesFromJson,
+        listRecipes: listRecipes,
+        listRecipesByUserByCategories: listRecipesByUserByCategories,
+        getRecipe: getRecipe,
+        addRecipe: addRecipe,
 
+        listCategories: listCategories,
+        getCategory: getCategory,
+        addCategory: addCategory,
+
+        addUsersRecipe: addUsersRecipe,
+        addCategoriesRecipe: addCategoriesRecipe,
+
+        delCollection: delCollection
     };
 }

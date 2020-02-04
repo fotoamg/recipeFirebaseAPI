@@ -1,8 +1,8 @@
-module.exports = function (app, ds, firebase, authBll) {
+module.exports = function (app, firebase, authLogic) {
     app.route('/api/auth/login/:email/:password').get((req, res, next) => {
         const email = req.params['email'];
         const password = req.params['password'];
-        authBll.login(email, password)
+        authLogic.login(email, password)
             .then(data => res.send(data))
             .catch(error => next(error)) 
     })
@@ -19,7 +19,7 @@ module.exports = function (app, ds, firebase, authBll) {
         const lastname = req.body['lastname'];
         firebase.auth().createUserWithEmailAndPassword(email, password)
             .then(response => {
-                ds.addUser(response.user.uid, email, firstname, lastname)
+                authLogic.addUser(response.user.uid, email, firstname, lastname)
                     .then(userId => {
                         console.log(userId)
                         res.send(200, userId);
@@ -41,7 +41,7 @@ module.exports = function (app, ds, firebase, authBll) {
         const userId = req.body['userId'];
         const connectedUserId = req.body['connectedUserId'];
         const token = req.query.token;
-        ds.addConnectedUser(userId, connectedUserId, token)
+        authLogic.addConnectedUser(userId, connectedUserId, token)
             .then(response => {
                 res.send(200, response);
             })

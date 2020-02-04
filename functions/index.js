@@ -14,22 +14,12 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
-
 app.use(express.json())
-// app.listen(8000, () => {
-//     console.log('Server started!')
-// })
 app.use(bodyParser.json())
 
 app.get('/', function(req, res) {
   res.sendFile(path.join(__dirname + '/index.html'));
 });
-
-/*
-app.get('/', (req, res) => {
-    return res.status(200).json(`${project} API running,  usage example /api/recipes  or /api/categories `); 
-})
-*/
 
 firebase.initializeApp(
     { 
@@ -44,13 +34,12 @@ firebase.initializeApp(
     }
 )
 
+const fm = require('./firebaseMethods.js')(databaseUrl)
+const authLogic = require('./logic/auth.js')(firebase, fm);
+const recipesLogic = require('./logic/recipes.js')(authLogic, fm);
 
-let fm = require('./common/firebaseMethods.js')(databaseUrl)
-let ds = require('./bll/dataStorage.js')(fm);
-let recipesBll = require('./bll/recipesBll.js')(ds);
-let authBll = require('./bll/authBll.js')(firebase);
-require('./api/authApi.js')(app, ds, firebase, authBll);
-require('./api/recipesApi.js')(app, ds, recipesBll);
+require('./api/authApi.js')(app, firebase, authLogic);
+require('./api/recipesApi.js')(app, recipesLogic);
 
 app.use(function(err, req, res, next) {
     console.error(err) // Log error message in our server's console
