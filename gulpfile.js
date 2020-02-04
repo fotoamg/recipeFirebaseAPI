@@ -20,9 +20,16 @@ function copyApi(cb) {
     .pipe(dest('./public/functions/api'));
     cb();
 }
+
 function copyBll(cb) {
     src('./functions/logic/*.js')
-    .pipe(dest('./public/functions/bll'));
+    .pipe(dest('./public/functions/logic'));
+    cb();
+}
+
+function copyData(cb) {
+    src('./functions/data/*.json')
+    .pipe(dest('./public/functions/data'));
     cb();
 }
 
@@ -31,4 +38,5 @@ exports.default = function() {
     watch('./functions/**', { ignoreInitial: false }, copyFunctions);
     watch('./functions/api/**', { ignoreInitial: false }, copyApi);
     watch('./functions/logic/**', { ignoreInitial: false }, copyBll);
+    watch('./functions/data/**', { ignoreInitial: false }, copyData);
   };
